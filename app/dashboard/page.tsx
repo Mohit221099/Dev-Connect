@@ -21,20 +21,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  userType: 'student' | 'hirer';
-  bio?: string;
-  company?: string;
-  position?: string;
-  education?: string;
-  skills?: string[];
-  location?: string;
-  verified: boolean;
-}
+import Header from './Header';
+import { Challenge, User } from './types';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -135,71 +123,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Enhanced Header */}
-      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-700/60 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Code className="h-6 w-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-              </div>
-              <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  DevConnect
-                </span>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Professional Network</div>
-              </div>
-            </div>
-            
-            <nav className="hidden lg:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">
-                Dashboard
-              </Link>
-              <Link href="/projects" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors font-medium">
-                Projects
-              </Link>
-              <Link href="/challenges" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors font-medium">
-                Challenges
-              </Link>
-              {user.userType === 'student' ? (
-                <Link href="/discover" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors font-medium">
-                  Discover
-                </Link>
-              ) : (
-                <Link href="/talent" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors font-medium">
-                  Find Talent
-                </Link>
-              )}
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Search className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
-              <Avatar className="h-10 w-10 border-2 border-blue-200">
-                <AvatarImage src="" />
-                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <Header user={user} onLogout={handleLogout} />
       <div className="container mx-auto px-6 py-8">
         {/* Enhanced Welcome Section */}
         <motion.div
@@ -616,7 +540,8 @@ export default function Dashboard() {
                       <span>Basic Information</span>
                       <Badge variant="outline" className="ml-auto text-xs">Complete</Badge>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center 
+gap-3">
                       <Clock className="h-4 w-4 text-yellow-500" />
                       <span>Skills & Portfolio</span>
                       <Badge variant="secondary" className="ml-auto text-xs">75%</Badge>
@@ -670,7 +595,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Enhanced Upcoming Challenges */}
+                {/* Enhanced Trending Challenges */}
                 <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm dark:bg-slate-800/80">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -681,11 +606,43 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {[
-                        { title: 'React Performance Challenge', deadline: '3 days left', difficulty: 'Medium', prize: '$500', participants: 234 },
-                        { title: 'AI Algorithm Contest', deadline: '1 week left', difficulty: 'Hard', prize: '$1000', participants: 156 },
-                        { title: 'UI/UX Design Sprint', deadline: '2 weeks left', difficulty: 'Easy', prize: '$300', participants: 89 },
-                      ].map((challenge, index) => (
+                      {([
+                        {
+                          id: '1',
+                          title: 'Build a Real-time Chat Application',
+                          difficulty: 'Hard',
+                          category: 'Full Stack',
+                          duration: '7 days',
+                          participants: 234,
+                          prize: '$500 + Internship Opportunity',
+                          deadline: '2025-06-20',
+                          status: 'Active',
+                          company: 'TechCorp'
+                        },
+                        {
+                          id: '2',
+                          title: 'Algorithm Optimization Challenge',
+                          difficulty: 'Hard',
+                          category: 'Algorithm',
+                          duration: '3 days',
+                          participants: 156,
+                          prize: '$300 + Certificate',
+                          deadline: '2025-06-15',
+                          status: 'Active',
+                          company: 'CodeMasters'
+                        },
+                        {
+                          id: '3',
+                          title: 'Responsive Landing Page Design',
+                          difficulty: 'Medium',
+                          category: 'Frontend',
+                          duration: '5 days',
+                          participants: 89,
+                          prize: '$200 + Portfolio Review',
+                          deadline: '2025-06-18',
+                          status: 'Active'
+                        }
+                      ] as Challenge[]).map((challenge, index) => (
                         <div key={index} className="p-4 border border-slate-200 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 cursor-pointer">
                           <div className="flex justify-between items-start mb-3">
                             <h4 className="font-medium text-sm">{challenge.title}</h4>
@@ -713,9 +670,11 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
-                    <Button variant="outline" className="w-full mt-4">
-                      View All Challenges
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                    <Button variant="outline" className="w-full mt-4" asChild>
+                      <Link href="/dashboard/challenges">
+                        View All Challenges
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
