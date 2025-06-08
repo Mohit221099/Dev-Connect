@@ -56,4 +56,5 @@ export interface Challenge {
     skills?: string[];
     location?: string;
     verified: boolean;
+    avatar?: string;
   }

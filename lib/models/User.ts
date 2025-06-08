@@ -19,6 +19,7 @@ export interface IUser extends Document {
   verified: boolean;
   createdAt: Date;
   updatedAt: Date;
+  avatar: { type: String },
 }
 
 const UserSchema = new Schema<IUser>({

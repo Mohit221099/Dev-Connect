@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Code, Bell, Search, Users, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { User } from './types';
 
 interface HeaderProps {
-  user: { name: string; userType: 'student' | 'hirer' };
+  user: User;
   onLogout: () => void;
 }
 
@@ -38,7 +39,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
               href="/dashboard" 
               className={`font-medium transition-colors ${pathname === '/dashboard' 
                 ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
-                : 'text-slate-600 hover:text-blue-900 dark:text-slate-300 dark:hover:text-white'}`}
+                : 'text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-white'}`}
             >
               Dashboard
             </Link>
@@ -72,33 +73,35 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 href="/dashboard/talent" 
                 className={`font-medium transition-colors ${pathname === '/dashboard/talent' 
                   ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
-                  : 'text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-white'}`}
+                  : 'text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white'}`}
               >
-                Find Talent
+                Talent
               </Link>
             )}
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full"></div>
+            <Button variant="ghost" size="sm" className="relative">
+              <Bell className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-400 rounded-full"></span>
             </Button>
-            <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5" />
+            <Button variant="ghost" size="sm">
+              <Search className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <Users className="h-5 w-5" />
+            <Button variant="ghost" size="sm">
+              <Users className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onLogout}>
-              <LogOut className="h-5 w-5" />
+            <Button variant="ghost" size="sm" onClick={onLogout}>
+              <LogOut className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </Button>
-            <Avatar className="h-10 w-10 border-2 border-blue-200">
-              <AvatarImage src="" />
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
-                {user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Link href="/dashboard/profile" className="group">
+              <Avatar className="h-10 w-10 border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
+                <AvatarImage src={user.avatar || ''} alt={`${user.name}'s profile`} />
+                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
+                  {user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </div>
         </div>
       </div>
