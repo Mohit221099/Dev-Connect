@@ -16,6 +16,12 @@ export interface Challenge {
   }
   
   export interface Project {
+    coverImage: string | undefined;
+    contributionCount: number;
+    stars: any;
+    isStarred: unknown;
+    category: any;
+    visibility: string;
     id: string;
     title: string;
     description: string;
