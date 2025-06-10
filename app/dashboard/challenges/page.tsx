@@ -95,7 +95,7 @@ export default function ChallengesPage() {
   const [submissionResults, setSubmissionResults] = useState<{ input: string; output: string; expected: string; passed: boolean }[]>([]);
   const [streak, setStreak] = useState(0);
 
-  // Load challenges and submissions from localStorage
+  // Load challenges and submissions from localStorage on mount
   useEffect(() => {
     fetchUserData();
     let initialChallenges: Challenge[] = [];
@@ -119,10 +119,13 @@ export default function ChallengesPage() {
         }
       }
     } catch (error) {
-      console.error('Error parsing localStorage:', error);
+      console.error('Error accessing localStorage:', error);
+      // Fallback: Initialize as empty arrays if localStorage fails
+      initialChallenges = [];
+      initialSubmissions = [];
     }
 
-    // Initialize challenges as empty if none exist in localStorage
+    // Set initial state with loaded data
     setChallenges(initialChallenges);
     setFilteredChallenges(initialChallenges);
     setSubmissions(initialSubmissions);
@@ -132,9 +135,11 @@ export default function ChallengesPage() {
     }, 1000);
   }, []);
 
-  // Save challenges and submissions to localStorage whenever they change
+  // Persist challenges and submissions to localStorage whenever they change
   useEffect(() => {
     try {
+      // Save challenges to localStorage to ensure they persist across refreshes
+      // This ensures challenges are permanently available for both hirers and students
       localStorage.setItem('challenges', JSON.stringify(challenges));
       localStorage.setItem('submissions', JSON.stringify(submissions));
     } catch (error) {
@@ -276,7 +281,7 @@ export default function ChallengesPage() {
     if (!challengeFormData.deadline) errors.deadline = 'Deadline is required';
     if (!challengeFormData.problemStatement.trim()) errors.problemStatement = 'Problem statement is required';
     if (challengeFormData.testCases.length === 0 || challengeFormData.testCases.some(tc => !tc.input || !tc.output)) {
-      errors.testCases = [{ input: '', output: '' }];
+      errors.testCases = [{ input: '', output: '' }]; // Change to an array of objects
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
