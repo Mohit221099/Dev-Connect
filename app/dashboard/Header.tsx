@@ -8,12 +8,40 @@ import Link from 'next/link';
 import { User } from './types';
 
 interface HeaderProps {
-  user: User;
+  user: User | null; // Allow user to be null
   onLogout: () => void;
 }
 
 export default function Header({ user, onLogout }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // If user is not available, show minimal header or redirect
+  if (!user) {
+    return (
+      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-gray-700/60 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Code className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+              </div>
+              <div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  DevConnect
+                </span>
+                <div className="text-sm text-slate-500 dark:text-slate-400">Professional Network</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-500">Loading...</div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-gray-700/60 sticky top-0 z-50 shadow-sm">
@@ -98,7 +126,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
               <Avatar className="h-10 w-10 border-2 border-blue-200 group-hover:border-blue-400 transition-colors">
                 <AvatarImage src={user.avatar || ''} alt={`${user.name}'s profile`} />
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.name?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Link>

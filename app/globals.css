@@ -44,6 +44,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -76,7 +77,524 @@
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  }
+
+  /* Responsive typography base */
+  h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-snug;
+  }
+
+  h3 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed;
+  }
+
+  p {
+    @apply text-base sm:text-lg md:text-xl leading-relaxed;
+  }
+}
+
+/* Enhanced animations and responsive utilities */
+@layer components {
+  /* Smooth gradient animations */
+  .gradient-animation {
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Custom backdrop blur for better browser support */
+  .backdrop-blur-custom {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Enhanced shadow utilities */
+  .shadow-glow-blue {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 40px rgba(147, 51, 234, 0.15);
+  }
+
+  /* Improved text gradient rendering */
+  .text-gradient {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Enhanced touch targets for mobile */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2563eb, #7c3aed);
+  }
+
+  /* Responsive container padding and max-width */
+  .container-custom {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 480px) {
+    .container-custom {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .container-custom {
+      max-width: 640px;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container-custom {
+      max-width: 768px;
+      padding-left: 2.5rem;
+      padding-right: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-custom {
+      max-width: 1024px;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-custom {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .container-custom {
+      max-width: 1536px;
+    }
+  }
+
+  /* Responsive grid utilities for components */
+  .grid-responsive {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive {
+      gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive {
+      gap: 2rem;
+    }
+  }
+
+  /* Responsive card styling */
+  .card-responsive {
+    padding: 1rem;
+    border-radius: var(--radius);
+  }
+
+  @media (min-width: 640px) {
+    .card-responsive {
+      padding: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-responsive {
+      padding: 2rem;
+    }
+  }
+
+  /* Responsive button sizing */
+  .btn-responsive {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .btn-responsive {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .btn-responsive {
+      padding: 1rem 2rem;
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+  }
+
+  /* Responsive section padding */
+  .section-padding {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  @media (min-width: 640px) {
+    .section-padding {
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
+  }
+
+  /* Responsive particles for hero and footer */
+  .particles-responsive {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .particles-responsive {
+      display: none; /* Disable particles on smaller screens for performance */
+    }
+  }
+}
+
+/* Performance optimizations and responsive animations */
+@layer utilities {
+  /* GPU-accelerated transforms */
+  .transform-gpu {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Optimized animations */
+  .animate-optimized {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Responsive animation scaling */
+  .animate-scale {
+    animation: scaleIn 0.6s ease-out;
+  }
+
+  @keyframes scaleIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .animate-scale {
+      animation: scaleIn 0.4s ease-out; /* Faster animation on mobile */
+    }
+  }
+
+  /* Better font rendering */
+  .font-smooth {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent layout shift */
+  .aspect-ratio-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  }
+
+  .aspect-ratio-container > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Responsive image handling */
+  .img-responsive {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  /* Responsive text truncation */
+  .truncate-responsive {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (min-width: 640px) {
+    .truncate-responsive {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+  }
+
+  /* Responsive hover effects */
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  @media (hover: hover) {
+    .hover-scale:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hover-scale {
+      transform: none; /* Disable hover effects on mobile */
+    }
+  }
+
+  /* Responsive animation intensity */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0); opacity: 0.2; }
+    50% { transform: translateY(-20px); opacity: 0.5; }
+    100% { transform: translateY(0); opacity: 0.2; }
+  }
+
+  @media (max-width: 768px) {
+    .animate-float {
+      animation: float 4s ease-in-out infinite; /* Faster animation on mobile */
+    }
+  }
+
+  /* Responsive wave background */
+  .wave-background {
+    background: linear-gradient(
+      90deg,
+      rgba(59, 130, 246, 0.1),
+      rgba(139, 92, 246, 0.1),
+      rgba(59, 130, 246, 0.1)
+    );
+    background-size: 200% 200%;
+    animation: wave 15s linear infinite;
+  }
+
+  @keyframes wave {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  @media (max-width: 768px) {
+    .wave-background {
+      animation: wave 10s linear infinite; /* Faster wave on mobile */
+    }
+  }
+}
+
+/* Enhanced accessibility and reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-optimized,
+  .animate-scale,
+  .animate-float,
+  .wave-background,
+  .gradient-animation {
+    animation: none !important;
+  }
+
+  .hover-scale {
+    transform: none !important;
+  }
+}
+
+/* Ensure proper stacking contexts */
+.stacking-context {
+  isolation: isolate;
+}
+
+/* Enhanced focus states for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Print styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .hover-scale {
+    transform: none; /* Disable hover effects on touch devices */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 0; /* Hide scrollbar on touch devices */
+  }
+}
+
+/* High-density display support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .font-smooth {
+    font-smooth: always;
+  }
+
+  .img-responsive {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Responsive typography scaling */
+@layer utilities {
+  .text-scale {
+    font-size: clamp(0.875rem, 2vw, 1.125rem);
+    line-height: 1.5;
+  }
+
+  .text-scale-lg {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    line-height: 1.5;
+  }
+
+  .text-scale-xl {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    line-height: 1.4;
+  }
+
+  .text-scale-2xl {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.3;
+  }
+}
+
+/* Responsive spacing utilities */
+@layer utilities {
+  .gap-responsive {
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .gap-responsive {
+      gap: 1rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .gap-responsive {
+      gap: 1.5rem;
+    }
+  }
+
+  .px-responsive {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .px-responsive {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .px-responsive {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  .py-responsive {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .py-responsive {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .py-responsive {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
   }
 }
