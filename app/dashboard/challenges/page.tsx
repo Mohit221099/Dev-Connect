@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Trophy, 
   Clock, 
@@ -27,120 +30,117 @@ import {
   XCircle,
   Timer,
   Flame,
-  TrendingUp
+  TrendingUp,
+  Plus,
+  Check,
+  X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Header from '../Header';
 import { Challenge, User } from '../types';
+
+interface ChallengeFormData {
+  title: string;
+  description: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  category: 'Frontend' | 'Backend' | 'Full Stack' | 'Algorithm' | 'Database' | 'DevOps';
+  duration: string;
+  prize: string;
+  tags: string[];
+  deadline: string;
+  problemStatement: string;
+  testCases: { input: string; output: string }[];
+  company: string;
+}
+
+interface Submission {
+  id: string;
+  challengeId: string;
+  user: string;
+  code: string;
+  status: 'Accepted' | 'Wrong Answer' | 'Pending';
+  submittedAt: string;
+}
 
 export default function ChallengesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [filteredChallenges, setFilteredChallenges] = useState<Challenge[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [userLoading, setUserLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCodingModalOpen, setIsCodingModalOpen] = useState(false);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [code, setCode] = useState<string>('');
+  const [challengeFormData, setChallengeFormData] = useState<ChallengeFormData>({
+    title: '',
+    description: '',
+    difficulty: 'Easy',
+    category: 'Frontend',
+    duration: '',
+    prize: '',
+    tags: [],
+    deadline: '',
+    problemStatement: '',
+    testCases: [{ input: '', output: '' }],
+    company: '',
+  });
+  const [formErrors, setFormErrors] = useState<Partial<ChallengeFormData>>({});
+  const [submissionResults, setSubmissionResults] = useState<{ input: string; output: string; expected: string; passed: boolean }[]>([]);
+  const [streak, setStreak] = useState(0);
 
+  // Load challenges and submissions from localStorage
   useEffect(() => {
     fetchUserData();
-    const mockChallenges: Challenge[] = [
-      {
-        id: '1',
-        title: 'Build a Real-time Chat Application',
-        description: 'Create a full-stack chat application using React, Node.js, and Socket.io with user authentication and message persistence.',
-        difficulty: 'Hard',
-        category: 'Full Stack',
-        duration: '7 days',
-        participants: 234,
-        prize: '$500 + Internship Opportunity',
-        tags: ['React', 'Node.js', 'Socket.io', 'MongoDB'],
-        deadline: '2025-06-20',
-        status: 'Active',
-        progress: 45,
-        isEnrolled: true,
-        company: 'TechCorp'
-      },
-      {
-        id: '2',
-        title: 'Algorithm Optimization Challenge',
-        description: 'Solve complex algorithmic problems focusing on time and space complexity optimization.',
-        difficulty: 'Hard',
-        category: 'Algorithm',
-        duration: '3 days',
-        participants: 156,
-        prize: '$300 + Certificate',
-        tags: ['Algorithms', 'Data Structures', 'Python', 'C++'],
-        deadline: '2025-06-15',
-        status: 'Active',
-        company: 'CodeMasters'
-      },
-      {
-        id: '3',
-        title: 'Responsive Landing Page Design',
-        description: 'Design and develop a modern, responsive landing page for a startup company.',
-        difficulty: 'Medium',
-        category: 'Frontend',
-        duration: '5 days',
-        participants: 89,
-        prize: '$200 + Portfolio Review',
-        tags: ['HTML', 'CSS', 'JavaScript', 'Figma'],
-        deadline: '2025-06-18',
-        status: 'Active',
-        progress: 20,
-        isEnrolled: true
-      },
-      {
-        id: '4',
-        title: 'API Development Sprint',
-        description: 'Build a RESTful API with authentication, rate limiting, and comprehensive documentation.',
-        difficulty: 'Medium',
-        category: 'Backend',
-        duration: '4 days',
-        participants: 67,
-        prize: '$250 + Code Review',
-        tags: ['Node.js', 'Express', 'PostgreSQL', 'JWT'],
-        deadline: '2025-06-25',
-        status: 'Upcoming'
-      },
-      {
-        id: '5',
-        title: 'DevOps Pipeline Challenge',
-        description: 'Set up a complete CI/CD pipeline with automated testing and deployment.',
-        difficulty: 'Hard',
-        category: 'DevOps',
-        duration: '6 days',
-        participants: 45,
-        prize: '$400 + Job Interview',
-        tags: ['Docker', 'Jenkins', 'AWS', 'Kubernetes'],
-        deadline: '2025-07-01',
-        status: 'Upcoming',
-        company: 'CloudTech'
-      },
-      {
-        id: '6',
-        title: 'Database Design Competition',
-        description: 'Design an efficient database schema for a complex e-commerce platform.',
-        difficulty: 'Medium',
-        category: 'Database',
-        duration: '3 days',
-        participants: 78,
-        prize: '$150 + Mentorship',
-        tags: ['SQL', 'PostgreSQL', 'Database Design', 'Performance'],
-        deadline: '2025-06-12',
-        status: 'Completed'
+    let initialChallenges: Challenge[] = [];
+    let initialSubmissions: Submission[] = [];
+
+    try {
+      const storedChallenges = localStorage.getItem('challenges');
+      const storedSubmissions = localStorage.getItem('submissions');
+
+      if (storedChallenges) {
+        const parsedChallenges = JSON.parse(storedChallenges);
+        if (Array.isArray(parsedChallenges)) {
+          initialChallenges = parsedChallenges;
+        }
       }
-    ];
+
+      if (storedSubmissions) {
+        const parsedSubmissions = JSON.parse(storedSubmissions);
+        if (Array.isArray(parsedSubmissions)) {
+          initialSubmissions = parsedSubmissions;
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing localStorage:', error);
+    }
+
+    // Initialize challenges as empty if none exist in localStorage
+    setChallenges(initialChallenges);
+    setFilteredChallenges(initialChallenges);
+    setSubmissions(initialSubmissions);
 
     setTimeout(() => {
-      setChallenges(mockChallenges);
-      setFilteredChallenges(mockChallenges);
       setLoading(false);
     }, 1000);
   }, []);
+
+  // Save challenges and submissions to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('challenges', JSON.stringify(challenges));
+      localStorage.setItem('submissions', JSON.stringify(submissions));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }, [challenges, submissions]);
 
   const fetchUserData = async () => {
     try {
@@ -166,7 +166,8 @@ export default function ChallengesPage() {
       filtered = filtered.filter(challenge =>
         challenge.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         challenge.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        challenge.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        challenge.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (challenge.company && challenge.company.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -210,14 +211,183 @@ export default function ChallengesPage() {
   const enrollInChallenge = (challengeId: string) => {
     setChallenges(prev => prev.map(challenge => 
       challenge.id === challengeId 
-        ? { ...challenge, isEnrolled: true, participants: challenge.participants + 1 }
+        ? { ...challenge, isEnrolled: true, participants: challenge.participants + 1, progress: challenge.progress || 0 }
         : challenge
     ));
+    setStreak(prev => prev + 1);
+  };
+
+  const openCodingEnvironment = (challenge: Challenge) => {
+    setSelectedChallenge(challenge);
+    setCode('');
+    setSubmissionResults([]);
+    setIsCodingModalOpen(true);
+  };
+
+  const submitSolution = () => {
+    if (!selectedChallenge) return;
+
+    const results: { input: string; output: string; expected: string; passed: boolean }[] = [];
+    let allPassed = true;
+
+    // Simulate test case evaluation (in a real app, this would involve running the code)
+    selectedChallenge.testCases.forEach(testCase => {
+      const simulatedOutput = code.includes('pass') ? testCase.output : 'fail'; // Simplified simulation
+      const passed = simulatedOutput === testCase.output;
+      if (!passed) allPassed = false;
+      results.push({
+        input: testCase.input,
+        output: simulatedOutput,
+        expected: testCase.output,
+        passed,
+      });
+    });
+
+    setSubmissionResults(results);
+
+    const newSubmission: Submission = {
+      id: `${Date.now()}`,
+      challengeId: selectedChallenge.id,
+      user: user!.username,
+      code,
+      status: allPassed ? 'Accepted' : 'Wrong Answer',
+      submittedAt: new Date().toISOString(),
+    };
+
+    setSubmissions(prev => [...prev, newSubmission]);
+
+    if (allPassed) {
+      setChallenges(prev => prev.map(challenge => 
+        challenge.id === selectedChallenge.id 
+          ? { ...challenge, progress: 100 }
+          : challenge
+      ));
+      setStreak(prev => prev + 1);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Partial<ChallengeFormData> = {};
+    if (!challengeFormData.title.trim()) errors.title = 'Title is required';
+    if (!challengeFormData.description.trim()) errors.description = 'Description is required';
+    if (!challengeFormData.duration.trim()) errors.duration = 'Duration is required';
+    if (!challengeFormData.prize.trim()) errors.prize = 'Prize is required';
+    if (challengeFormData.tags.length === 0) errors.tags = ['At least one tag is required'];
+    if (!challengeFormData.deadline) errors.deadline = 'Deadline is required';
+    if (!challengeFormData.problemStatement.trim()) errors.problemStatement = 'Problem statement is required';
+    if (challengeFormData.testCases.length === 0 || challengeFormData.testCases.some(tc => !tc.input || !tc.output)) {
+      errors.testCases = [{ input: '', output: '' }];
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreateChallenge = () => {
+    if (!validateForm()) return;
+
+    const newChallenge: Challenge = {
+      id: `${Date.now()}`,
+      title: challengeFormData.title.trim(),
+      description: challengeFormData.description.trim(),
+      difficulty: challengeFormData.difficulty,
+      category: challengeFormData.category,
+      duration: challengeFormData.duration,
+      participants: 0,
+      prize: challengeFormData.prize,
+      tags: challengeFormData.tags,
+      deadline: challengeFormData.deadline,
+      status: new Date(challengeFormData.deadline) > new Date() ? 'Upcoming' : 'Active',
+      company: user!.username,
+      problemStatement: challengeFormData.problemStatement,
+      testCases: challengeFormData.testCases,
+      isEnrolled: false,
+    };
+
+    setChallenges(prev => [...prev, newChallenge]);
+    setChallengeFormData({
+      title: '',
+      description: '',
+      difficulty: 'Easy',
+      category: 'Frontend',
+      duration: '',
+      prize: '',
+      tags: [],
+      deadline: '',
+      problemStatement: '',
+      testCases: [{ input: '', output: '' }],
+      company: '',
+    });
+    setFormErrors({});
+    setIsCreateModalOpen(false);
+  };
+
+  const handleTechInput = (value: string) => {
+    const techArray = value.split(',').map(tech => tech.trim()).filter(tech => tech);
+    setChallengeFormData(prev => ({ ...prev, tags: techArray }));
+    setFormErrors(prev => ({ ...prev, tags: undefined }));
+  };
+
+  const addTestCase = () => {
+    setChallengeFormData(prev => ({
+      ...prev,
+      testCases: [...prev.testCases, { input: '', output: '' }],
+    }));
+  };
+
+  const updateTestCase = (index: number, field: 'input' | 'output', value: string) => {
+    setChallengeFormData(prev => {
+      const newTestCases = [...prev.testCases];
+      newTestCases[index] = { ...newTestCases[index], [field]: value };
+      return { ...prev, testCases: newTestCases };
+    });
+  };
+
+  const removeTestCase = (index: number) => {
+    setChallengeFormData(prev => ({
+      ...prev,
+      testCases: prev.testCases.filter((_, i) => i !== index),
+    }));
   };
 
   const handleLogout = () => {
     document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
     router.push('/');
+  };
+
+  const renderLeaderboard = () => {
+    const completedChallenges = challenges.filter(c => c.status === 'Completed');
+    const leaderboardData = completedChallenges.map(challenge => ({
+      challenge: challenge.title,
+      participants: challenge.participants,
+      winner: `User_${Math.floor(Math.random() * 100)}`, // Simulated winner
+    }));
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Leaderboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {leaderboardData.length === 0 ? (
+            <p className="text-gray-600 dark:text-gray-300">No completed challenges yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {leaderboardData.map((entry, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  <div>
+                    <p className="text-sm font-medium">{entry.challenge}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Winner: {entry.winner} | {entry.participants} participants
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
   };
 
   if (userLoading) {
@@ -264,17 +434,21 @@ export default function ChallengesPage() {
                     : 'Test your skills, compete with peers, and win exciting prizes'}
                 </p>
               </div>
-              {user.userType === 'hirer' ? (
-                <Button className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700">
-                  <Target className="h-4 w-4 mr-2" />
-                  Create Challenge
-                </Button>
-              ) : (
+              <div className="flex gap-2">
+                {user.userType === 'hirer' && (
+                  <Button 
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Post a Challenge
+                  </Button>
+                )}
                 <Button className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700">
                   <Zap className="h-4 w-4 mr-2" />
                   Find Challenges
                 </Button>
-              )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -283,7 +457,7 @@ export default function ChallengesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Active Challenges</p>
-                      <p className="text-2xl font-bold text-green-600">12</p>
+                      <p className="text-2xl font-bold text-green-600">{challenges.filter(c => c.status === 'Active').length}</p>
                     </div>
                     <Flame className="h-8 w-8 text-green-500" />
                   </div>
@@ -294,7 +468,7 @@ export default function ChallengesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Enrolled</p>
-                      <p className="text-2xl font-bold text-blue-600">3</p>
+                      <p className="text-2xl font-bold text-blue-600">{challenges.filter(c => c.isEnrolled).length}</p>
                     </div>
                     <BookOpen className="h-8 w-8 text-blue-500" />
                   </div>
@@ -305,7 +479,7 @@ export default function ChallengesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Completed</p>
-                      <p className="text-2xl font-bold text-purple-600">8</p>
+                      <p className="text-2xl font-bold text-purple-600">{challenges.filter(c => c.status === 'Completed').length}</p>
                     </div>
                     <Award className="h-8 w-8 text-purple-500" />
                   </div>
@@ -315,8 +489,8 @@ export default function ChallengesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Rank</p>
-                      <p className="text-2xl font-bold text-orange-600">#24</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Streak</p>
+                      <p className="text-2xl font-bold text-orange-600">{streak} days</p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-orange-500" />
                   </div>
@@ -324,6 +498,8 @@ export default function ChallengesPage() {
               </Card>
             </div>
           </div>
+
+          {renderLeaderboard()}
 
           <Card>
             <CardContent className="p-6">
@@ -464,6 +640,7 @@ export default function ChallengesPage() {
                                 className="w-full" 
                                 variant="outline"
                                 disabled={challenge.status === 'Completed'}
+                                onClick={() => openCodingEnvironment(challenge)}
                               >
                                 <Code className="h-4 w-4 mr-2" />
                                 {challenge.status === 'Completed' ? 'View Results' : 'Continue Challenge'}
@@ -471,7 +648,10 @@ export default function ChallengesPage() {
                             ) : (
                               <Button 
                                 className="w-full"
-                                onClick={() => enrollInChallenge(challenge.id)}
+                                onClick={() => {
+                                  enrollInChallenge(challenge.id);
+                                  openCodingEnvironment(challenge);
+                                }}
                                 disabled={challenge.status === 'Completed'}
                               >
                                 <Zap className="h-4 w-4 mr-2" />
@@ -493,12 +673,256 @@ export default function ChallengesPage() {
                     No challenges found
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Try adjusting your search criteria or check back later for new challenges.
+                    {user.userType === 'hirer' 
+                      ? 'Start by posting a new challenge to find top talent.'
+                      : 'Check back later for new challenges posted by hirers.'}
                   </p>
                 </div>
               )}
             </TabsContent>
           </Tabs>
+
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Post a New Challenge</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Challenge Title</Label>
+                  <Input
+                    id="title"
+                    value={challengeFormData.title}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter challenge title"
+                    className={formErrors.title ? 'border-red-500' : ''}
+                  />
+                  {formErrors.title && <p className="text-red-500 text-xs">{formErrors.title}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={challengeFormData.description}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe the challenge"
+                    rows={4}
+                    className={formErrors.description ? 'border-red-500' : ''}
+                  />
+                  {formErrors.description && <p className="text-red-500 text-xs">{formErrors.description}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="problemStatement">Problem Statement</Label>
+                  <Textarea
+                    id="problemStatement"
+                    value={challengeFormData.problemStatement}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, problemStatement: e.target.value }))}
+                    placeholder="Detailed problem statement"
+                    rows={4}
+                    className={formErrors.problemStatement ? 'border-red-500' : ''}
+                  />
+                  {formErrors.problemStatement && <p className="text-red-500 text-xs">{formErrors.problemStatement}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="difficulty">Difficulty</Label>
+                  <Select
+                    value={challengeFormData.difficulty}
+                    onValueChange={(value) => setChallengeFormData(prev => ({ ...prev, difficulty: value as 'Easy' | 'Medium' | 'Hard' }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Easy">Easy</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={challengeFormData.category}
+                    onValueChange={(value) => setChallengeFormData(prev => ({ ...prev, category: value as ChallengeFormData['category'] }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Frontend">Frontend</SelectItem>
+                      <SelectItem value="Backend">Backend</SelectItem>
+                      <SelectItem value="Full Stack">Full Stack</SelectItem>
+                      <SelectItem value="Algorithm">Algorithm</SelectItem>
+                      <SelectItem value="Database">Database</SelectItem>
+                      <SelectItem value="DevOps">DevOps</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration</Label>
+                  <Input
+                    id="duration"
+                    value={challengeFormData.duration}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, duration: e.target.value }))}
+                    placeholder="e.g., 5 days"
+                    className={formErrors.duration ? 'border-red-500' : ''}
+                  />
+                  {formErrors.duration && <p className="text-red-500 text-xs">{formErrors.duration}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prize">Prize</Label>
+                  <Input
+                    id="prize"
+                    value={challengeFormData.prize}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, prize: e.target.value }))}
+                    placeholder="e.g., $200 + Certificate"
+                    className={formErrors.prize ? 'border-red-500' : ''}
+                  />
+                  {formErrors.prize && <p className="text-red-500 text-xs">{formErrors.prize}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="tags"
+                    placeholder="e.g., React, Node.js, MongoDB"
+                    onChange={(e) => handleTechInput(e.target.value)}
+                    className={formErrors.tags ? 'border-red-500' : ''}
+                  />
+                  {formErrors.tags && <p className="text-red-500 text-xs">{formErrors.tags}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="deadline">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={challengeFormData.deadline}
+                    onChange={(e) => setChallengeFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                    className={formErrors.deadline ? 'border-red-500' : ''}
+                  />
+                  {formErrors.deadline && <p className="text-red-500 text-xs">{formErrors.deadline}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label>Test Cases</Label>
+                  {challengeFormData.testCases.map((testCase, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <Input
+                        placeholder="Input"
+                        value={testCase.input}
+                        onChange={(e) => updateTestCase(index, 'input', e.target.value)}
+                        className="flex-1"
+                      />
+                      <Input
+                        placeholder="Output"
+                        value={testCase.output}
+                        onChange={(e) => updateTestCase(index, 'output', e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button variant="destructive" size="sm" onClick={() => removeTestCase(index)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" onClick={addTestCase}>
+                    Add Test Case
+                  </Button>
+                  {formErrors.testCases && <p className="text-red-500 text-xs">{formErrors.testCases}</p>}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setFormErrors({});
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateChallenge}>
+                  Post Challenge
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isCodingModalOpen} onOpenChange={setIsCodingModalOpen}>
+            <DialogContent className="sm:max-w-[800px]">
+              <DialogHeader>
+                <DialogTitle>{selectedChallenge?.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Problem Statement</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{selectedChallenge?.problemStatement}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Test Cases</Label>
+                  {selectedChallenge?.testCases.map((testCase, index) => (
+                    <div key={index} className="border p-2 rounded">
+                      <p className="text-sm"><strong>Input:</strong> {testCase.input}</p>
+                      <p className="text-sm"><strong>Output:</strong> {testCase.output}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="code">Your Solution</Label>
+                  <Textarea
+                    id="code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="Write your code here..."
+                    rows={10}
+                    className="font-mono"
+                  />
+                </div>
+                {submissionResults.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Submission Results</Label>
+                    {submissionResults.map((result, index) => (
+                      <div key={index} className="border p-2 rounded flex items-center gap-2">
+                        {result.passed ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <div>
+                          <p className="text-sm"><strong>Input:</strong> {result.input}</p>
+                          <p className="text-sm"><strong>Output:</strong> {result.output}</p>
+                          <p className="text-sm"><strong>Expected:</strong> {result.expected}</p>
+                          <p className="text-sm"><strong>Status:</strong> {result.passed ? 'Passed' : 'Failed'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>Submission History</Label>
+                  {submissions
+                    .filter(sub => sub.challengeId === selectedChallenge?.id)
+                    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                    .slice(0, 5)
+                    .map((submission, index) => (
+                      <div key={index} className="border p-2 rounded flex items-center gap-2">
+                        {submission.status === 'Accepted' ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <div>
+                          <p className="text-sm"><strong>Status:</strong> {submission.status}</p>
+                          <p className="text-sm"><strong>Submitted:</strong> {new Date(submission.submittedAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCodingModalOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={submitSolution}>
+                  Submit Solution
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
